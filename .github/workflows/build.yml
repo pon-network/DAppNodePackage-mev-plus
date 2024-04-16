@@ -1,0 +1,14 @@
+name: Build
+on:
+  push:
+    branches:
+        - "main"
+        - "master"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx @dappnode/dappnodesdk github-action build
