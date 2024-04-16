@@ -1,0 +1,40 @@
+name: "Publish"
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Bump type, must be: patch"
+        required: true
+  repository_dispatch:
+  pull_request:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+    paths-ignore:
+      - "README.md"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    name: Build test
+    if: github.event_name != 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: npx @dappnode/dappnodesdk build --skip_save
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish
+        run: npx @dappnode/dappnodesdk publish patch --timeout 1h --content_provider pinata --eth_provider ${{ secrets.ETH_PROVIDER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.DAPPNODE_GITHUB_READ_TOKEN }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
+          DEVELOPER_ADDRESS: "0xF84eeDc34257018Ba77353b9F5b3e11AeAeecC2a"
